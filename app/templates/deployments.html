@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Deployments in <span class="text-primary">{% if namespace == 'all' %}All Namespaces{% else %}{{ namespace }}{% endif %}</span></h2>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>NAMESPACE</th>
+            <th>NAME</th>
+            <th>READY</th>
+            <th>UP-TO-DATE</th>
+            <th>AVAILABLE</th>
+            <th>AGE</th>
+            <th>ACTIONS</th>
+        </tr>
+    </thead>
+    <tbody id="resourceTableBody">
+    {% for dep in deployments %}
+        <tr>
+            <td>{{ dep.namespace }}</td>
+            <td>{{ dep.name }}</td>
+            <td>{{ dep.ready_replicas }}/{{ dep.replicas }}</td>
+            <td>{{ dep.up_to_date_replicas }}</td>
+            <td>{{ dep.available_replicas }}</td>
+            <td>{{ dep.age }}</td>
+            <td>
+                <a href="{{ url_for('main.describe_deployment', namespace=dep.namespace, name=dep.name) }}" class="btn btn-info btn-sm">Describe</a>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="7" class="text-center">No deployments found.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

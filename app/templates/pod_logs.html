@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0">Logs: <span class="text-primary">{{ name }}</span></h2>
+        <p class="text-muted">Namespace: {{ namespace }}</p>
+    </div>
+    <a href="{{ url_for('main.pods_list', namespace=namespace) }}" class="btn btn-secondary">Back to Pods</a>
+</div>
+
+<div class="card bg-dark text-white">
+    <div class="card-body">
+        <pre id="log-output" style="white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto;"></pre>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const logOutput = document.getElementById('log-output');
+
+        // The URL for our streaming endpoint
+        const logStreamUrl = "{{ url_for('main.stream_logs', namespace=namespace, name=name) }}";
+
+        // Use EventSource for a simple and efficient way to handle server-sent events
+        const eventSource = new EventSource(logStreamUrl);
+
+        // Append new log lines as they arrive from the server
+        eventSource.onmessage = function(event) {
+            logOutput.textContent += event.data;
+            // Auto-scroll to the bottom
+            logOutput.scrollTop = logOutput.scrollHeight;
+        };
+
+        // Handle errors, e.g., if the connection is lost
+        eventSource.onerror = function(err) {
+            logOutput.textContent += "\n--- Connection lost. Reconnecting... ---\n";
+            console.error("EventSource failed:", err);
+            // The browser will automatically try to reconnect.
+        };
+    });
+</script>
+{% endblock %}

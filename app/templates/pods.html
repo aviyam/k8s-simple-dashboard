@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if node_filter and node_filter != 'all' %}
+<div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+    <span>Showing pods on node: <strong>{{ node_filter }}</strong></span>
+    <a href="{{ url_for('main.pods_list', namespace=namespace) }}" class="btn btn-sm btn-outline-info">Clear Filter</a>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Pods in <span class="text-primary">{% if namespace == 'all' %}All Namespaces{% else %}{{ namespace }}{% endif %}</span></h2>
+</div>
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Namespace</th>
+            <th>Status</th>
+            <th>Restarts</th>
+            <th>Pod IP</th>
+            <th>Node</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="resourceTableBody">
+    {% for pod in pods %}
+        {% set status_class = '' %}
+        {% if pod.status == 'Running' %}
+            {% set status_class = 'status-running' %}
+        {% elif pod.status == 'Succeeded' %}
+            {% set status_class = 'status-succeeded' %}
+        {% elif pod.status == 'Failed' or pod.status == 'Error' %}
+            {% set status_class = 'status-failed' %}
+        {% elif pod.status == 'Pending' %}
+            {% set status_class = 'status-pending' %}
+        {% endif %}
+
+        <tr class="{{ status_class }}">
+            <td>{{ pod.name }}</td>
+            <td>{{ pod.namespace }}</td>
+            <td>{{ pod.status }}</td>
+            <td>{{ pod.restarts }}</td>
+            <td>{{ pod.ip }}</td>
+            <td>{{ pod.node }}</td>
+            <td>
+                <a href="{{ url_for('main.show_logs_page', namespace=pod.namespace, name=pod.name) }}" class="btn btn-success btn-sm">Logs</a>
+                <a href="{{ url_for('main.describe_pod', namespace=pod.namespace, name=pod.name) }}" class="btn btn-info btn-sm">Describe</a>
+
+                <form action="{{ url_for('main.restart_pod', namespace=pod.namespace, name=pod.name) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-warning btn-sm">Restart</button>
+                </form>
+
+                <form action="{{ url_for('main.delete_pod', namespace=pod.namespace, name=pod.name) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this pod?');">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="7" class="text-center">No pods found.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

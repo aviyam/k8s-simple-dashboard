@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Deployment Details</h2>
+    <a href="{{ url_for('main.deployments_list', namespace=details.namespace) }}" class="btn btn-secondary">Back to Deployments</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">{{ details.name }}</h5></div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ details.namespace }}</dd>
+            <dt class="col-sm-3">Created</dt><dd class="col-sm-9">{{ details.creation_timestamp }}</dd>
+            <dt class="col-sm-3">Strategy</dt><dd class="col-sm-9">{{ details.strategy }}</dd>
+            <dt class="col-sm-3">Labels</dt>
+            <dd class="col-sm-9">
+                {% for key, value in details.labels.items() %}
+                <span class="badge bg-info text-dark">{{ key }}={{ value }}</span>
+                {% endfor %}
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">Status</h5></div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Desired</dt><dd class="col-sm-3">{{ details.replicas_status.desired }}</dd>
+            <dt class="col-sm-3">Total</dt><dd class="col-sm-3">{{ details.replicas_status.total }}</dd>
+            <dt class="col-sm-3">Updated</dt><dd class="col-sm-3">{{ details.replicas_status.updated }}</dd>
+            <dt class="col-sm-3">Available</dt><dd class="col-sm-3">{{ details.replicas_status.available }}</dd>
+        </dl>
+        <h6>Conditions</h6>
+        <table class="table table-bordered table-sm">
+            <thead class="table-light"><tr><th>Type</th><th>Status</th><th>Reason</th></tr></thead>
+            <tbody>
+            {% for cond in details.conditions %}
+                <tr><td>{{ cond.type }}</td><td>{{ cond.status }}</td><td>{{ cond.reason }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">Pod Template</h5></div>
+    <div class="card-body">
+        <h6>Labels</h6>
+        <p>{% for key, value in details.pod_template.labels.items() %}<span class="badge bg-secondary">{{ key }}={{ value }}</span> {% endfor %}</p>
+        <hr/>
+        <h6>Containers</h6>
+        {% for c in details.pod_template.containers %}
+            <p><strong>{{ c.name }}</strong>: {{ c.image }}</p>
+        {% endfor %}
+        <hr/>
+        <h6>Volumes</h6>
+        <p>{% for v in details.pod_template.volumes %}<span class="badge bg-light text-dark">{{ v.name }} ({{ v.type }})</span> {% endfor %}</p>
+    </div>
+</div>
+
+<h4 class="mt-4">ReplicaSets</h4>
+<table class="table table-striped table-sm">
+    <thead class="table-light"><tr><th>Name</th><th>Replicas</th><th>Ready</th></tr></thead>
+    <tbody>
+    {% for rs in details.replica_sets %}
+        <tr><td>{{ rs.name }}</td><td>{{ rs.replicas }}</td><td>{{ rs.ready_replicas }}</td></tr>
+    {% else %}
+        <tr><td colspan="3" class="text-center">No ReplicaSets found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h4 class="mt-4">Events</h4>
+<table class="table table-striped table-sm">
+    <thead class="table-light"><tr><th>Last Seen</th><th>Type</th><th>Reason</th><th>Message</th></tr></thead>
+    <tbody>
+    {% for event in details.events %}
+        <tr>
+            <td>{{ event.last_seen }}</td>
+            <td><span class="badge bg-{{ 'warning text-dark' if event.type == 'Warning' else 'secondary' }}">{{ event.type }}</span></td>
+            <td>{{ event.reason }}</td><td>{{ event.message }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4" class="text-center">No events found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

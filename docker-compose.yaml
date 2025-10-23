@@ -1,0 +1,19 @@
+services:
+  dashboard:
+    image: localhost/dashboard
+    container_name: dashboard
+    pull_policy: always
+
+    ports:
+      - "8080:8080"
+    volumes:
+      - "~/.kube/config:/root/.kube/config:ro"
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

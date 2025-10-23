@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{# --- Recursive Macro to render the nested dictionary --- #}
+{% macro render_config(data, parent_id) %}
+    {% for key, value in data.items() %}
+        {% set unique_id = parent_id ~ '-' ~ loop.index %}
+        <li class="list-group-item">
+            {% if value is mapping %}
+                <a class="fw-bold config-toggle" data-bs-toggle="collapse" href="#collapse-{{ unique_id }}" role="button" aria-expanded="false">
+                    {{ key }}
+                </a>
+                <div class="collapse" id="collapse-{{ unique_id }}">
+                    <ul class="list-group list-group-flush">
+                        {{ render_config(value, unique_id) }}
+                    </ul>
+                </div>
+            {% else %}
+                <div class="config-item">
+                    <div class="config-key text-muted">{{ key }}:</div>
+                    <div class="config-value">{{ value }}</div>
+                </div>
+            {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %}
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Cluster Status</h2>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+<div class="card">
+    <div class="card-header"><h5 class="mb-0">System Status</h5></div>
+    <ul class="list-group list-group-flush">
+
+        {% for component in status.component_statuses %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ component.name }}</span>
+            {% if component.healthy %}<span class="badge bg-success">Healthy</span>{% else %}<span class="badge bg-danger">Unhealthy</span>{% endif %}
+        </li>
+        {% if component.message %}<li class="list-group-item list-group-item-warning small">{{ component.message }}</li>{% endif %}
+        {% else %}
+        <li class="list-group-item">Could not load component statuses.</li>
+        {% endfor %}
+    </ul>
+</div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Pods Status</h5></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">Running pods<span class="badge bg-success rounded-pill">{{ status.pod_counts.Running }}</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Pending pods<span class="badge bg-warning text-dark rounded-pill">{{ status.pod_counts.Pending }}</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Failed pods<span class="badge bg-danger rounded-pill">{{ status.pod_counts.Failed }}</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Succeeded pods<span class="badge bg-primary rounded-pill">{{ status.pod_counts.Succeeded }}</span></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="row mb-4">
+    </div>
+
+<div class="mb-4">
+    <h2 class="mb-3">Nodes</h2>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>NAME</th>
+                <th>STATUS</th>
+                <th>ROLE</th>
+                <th>TAINTS</th>
+                <th>VERSION</th>
+                <th>PODS</th>
+                <th>AGE</th>
+                <th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody id="resourceTableBody">
+        {% for node in nodes %}
+            <tr>
+                <td>{{ node.name }}</td>
+                <td>
+                    {% if node.status == 'Ready' %}
+                        <span class="badge bg-success">{{ node.status }}</span>
+                    {% else %}
+                        <span class="badge bg-danger">{{ node.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ node.role }}</td>
+                <td>{{ node.taints }}</td>
+                <td>{{ node.version }}</td>
+                <td>{{ node.pods }}</td>
+                <td>{{ node.age }}</td>
+                <td>
+                    <a href="{{ url_for('main.describe_node', name=node.name) }}" class="btn btn-info btn-sm me-2">Describe</a>
+                    <a href="{{ url_for('main.pods_list', node=node.name) }}" class="btn btn-primary btn-sm">View Pods</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="8" class="text-center">No nodes found.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    </div>
+
+{% endblock %}

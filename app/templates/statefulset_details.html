@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">StatefulSet Details</h2>
+    <a href="{{ url_for('main.stateful_sets_list', namespace=details.namespace) }}" class="btn btn-secondary">Back to StatefulSets</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">{{ details.name }}</h5></div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Namespace</dt><dd class="col-sm-9">{{ details.namespace }}</dd>
+            <dt class="col-sm-3">Created</dt><dd class="col-sm-9">{{ details.creation_timestamp }}</dd>
+            <dt class="col-sm-3">Controlled By</dt>
+            <dd class="col-sm-9">
+                {% for owner in details.owner_references %}
+                    {% if owner.kind == 'Deployment' %}
+                        <a href="{{ url_for('main.describe_deployment', namespace=details.namespace, name=owner.name) }}">{{ owner.kind }}/{{ owner.name }}</a>
+                    {% else %}
+                        {{ owner.kind }}/{{ owner.name }}
+                    {% endif %}
+                {% else %}
+                    &lt;none&gt;
+                {% endfor %}
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h5 class="card-title mb-0">Status</h5></div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Desired Replicas</dt><dd class="col-sm-9">{{ details.replicas_status.desired }}</dd>
+            <dt class="col-sm-3">Current Replicas</dt><dd class="col-sm-9">{{ details.replicas_status.current }}</dd>
+            <dt class="col-sm-3">Ready Replicas</dt><dd class="col-sm-9">{{ details.replicas_status.ready }}</dd>
+        </dl>
+    </div>
+</div>
+
+<h4 class="mt-4">Events</h4>
+<table class="table table-striped table-sm">
+    <thead class="table-light"><tr><th>Last Seen</th><th>Type</th><th>Reason</th><th>Message</th></tr></thead>
+    <tbody>
+    {% for event in details.events %}
+        <tr>
+            <td>{{ event.last_seen }}</td>
+            <td><span class="badge bg-{{ 'warning text-dark' if event.type == 'Warning' else 'secondary' }}">{{ event.type }}</span></td>
+            <td>{{ event.reason }}</td><td>{{ event.message }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4" class="text-center">No events found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

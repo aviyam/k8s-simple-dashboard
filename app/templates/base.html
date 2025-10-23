@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard</title>
+    <link rel="icon" type="image/ico"  href="{{ url_for('static', filename='icons/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #060125;">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">Dashboard</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    {% set current_namespace = request.args.get('namespace', 'all') %}
+                    {% set current_node = request.args.get('node', 'all') %}
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">Status</a></li>
+                        <li class="nav-item"><a class="nav-link {% if request.endpoint == 'main.pods_list' %}active{% endif %}" href="{{ url_for('main.pods_list', namespace=current_namespace, node=current_node) }}">Pods</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if request.endpoint.endswith('_list') and request.endpoint not in ['main.pods_list', 'main.index'] %}active{% endif %}" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Resources</a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown" style="background-color: #060125;">
+                                <li><a class="dropdown-item" href="{{ url_for('main.deployments_list', namespace=current_namespace) }}">Deployments</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.stateful_sets_list', namespace=current_namespace) }}">StatefulSets</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.daemon_sets_list', namespace=current_namespace) }}">DaemonSets</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.replica_sets_list', namespace=current_namespace) }}">ReplicaSets</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.jobs_list', namespace=current_namespace) }}">Jobs</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.cron_jobs_list', namespace=current_namespace) }}">CronJobs</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.services_list', namespace=current_namespace) }}">Services</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.ingresses_list', namespace=current_namespace) }}">Ingresses</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.config_maps_list', namespace=current_namespace) }}">ConfigMaps</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.secrets_list', namespace=current_namespace) }}">Secrets</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.persistent_volumes_list') }}">PersistentVolumes</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.pvcs_list', namespace=current_namespace) }}">PersistentVolumeClaims</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link {% if request.endpoint == 'main.images_list' %}active{% endif %}" href="{{ url_for('main.images_list') }}">Images</a></li>
+                    </ul>
+
+                </div>
+            </div>
+        </nav>
+
+        {% if request.endpoint != 'main.index' %}
+        <nav class="navbar navbar-light bg-light py-2 border-bottom">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-center align-items-center w-100">
+                    <form class="d-flex me-3" id="nodeForm" action="" method="get" style="width: 250px;">
+                        <input type="hidden" name="namespace" value="{{ current_namespace }}">
+                        <select class="form-select form-select-sm" name="node" onchange="this.form.submit()" title="Select Node">
+                            <option value="all" {% if current_node == 'all' %}selected{% endif %}>All Nodes</option>
+                            {% for n in all_nodes %}
+                                <option value="{{ n }}" {% if n == current_node %}selected{% endif %}>{{ n }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <form class="d-flex me-3" id="namespaceForm" action="" method="get" style="width: 250px;">
+                        <input type="hidden" name="node" value="{{ current_node }}">
+                        <select class="form-select form-select-sm" name="namespace" onchange="this.form.submit()" title="Select Namespace">
+                            <option value="all" {% if current_namespace == 'all' %}selected{% endif %}>All Namespaces</option>
+                            {% for ns in all_namespaces %}
+                                <option value="{{ ns }}" {% if ns == current_namespace %}selected{% endif %}>{{ ns }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    <form class="d-flex" onsubmit="return false;" style="width: 250px;">
+                        <input id="globalSearchInput" class="form-control form-control-sm" type="search" placeholder="Search page..." aria-label="Search">
+                    </form>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+    </header>
+
+    <main class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script rel="script" src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script rel="script" src="{{ url_for('static', filename='js/utils.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>ReplicaSets in <span class="text-primary">{% if namespace == 'all' %}All Namespaces{% else %}{{ namespace }}{% endif %}</span></h2>
+</div>
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>NAMESPACE</th>
+            <th>NAME</th>
+            <th>DESIRED</th>
+            <th>CURRENT</th>
+            <th>READY</th>
+            <th>AGE</th>
+            <th>ACTIONS</th>
+        </tr>
+    </thead>
+    <tbody id="resourceTableBody">
+    {% for item in items %}
+        <tr>
+            <td>{{ item.namespace }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.desired }}</td>
+            <td>{{ item.current }}</td>
+            <td>{{ item.ready }}</td>
+            <td>{{ item.age }}</td>
+            <td>
+                <a href="{{ url_for('main.describe_replica_set', namespace=item.namespace, name=item.name) }}" class="btn btn-info btn-sm">Describe</a>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="7" class="text-center">No ReplicaSets found.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,6 @@
+/.idea/
+/.venv/
+/dist/
+/flaskproject.egg-info/
+__pycache__
+app/__pycache__

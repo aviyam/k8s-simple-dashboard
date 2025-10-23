@@ -1,0 +1,37 @@
+
+tr.status-running {
+  --bs-table-bg: rgba(40, 167, 69, 0.2);
+  --bs-table-striped-bg: rgba(40, 167, 69, 0.2);
+  --bs-table-hover-bg: rgba(40, 167, 69, 0.3);
+}
+
+tr.status-succeeded {
+  --bs-table-bg: rgba(89, 223, 253, 0.3);
+  --bs-table-striped-bg: rgba(89, 223, 253, 0.3);
+  --bs-table-hover-bg: rgba(89, 223, 253, 0.3);
+}
+
+tr.status-pending {
+  --bs-table-bg: rgba(255, 193, 7, 0.2);
+  --bs-table-striped-bg: rgba(255, 193, 7, 0.2);
+  --bs-table-hover-bg: rgba(255, 193, 7, 0.3);
+}
+
+tr.status-failed {
+  --bs-table-bg: rgba(220, 53, 69, 0.2);
+  --bs-table-striped-bg: rgba(220, 53, 69, 0.2);
+  --bs-table-hover-bg: rgba(220, 53, 69, 0.3);
+}
+
+#backToTopBtn {
+  display: none; /* Hidden by default */
+  position: fixed; /* Fixed/sticky position */
+  bottom: 20px; /* Place the button at the bottom of the page */
+  right: 30px; /* Place the button on the right side */
+  z-index: 99; /* Make sure it does not overlap */
+  border: none; /* Remove borders */
+  outline: none; /* Remove outline */
+  cursor: pointer; /* Add a mouse pointer on hover */
+  padding: 10px 15px; /* Some padding */
+  border-radius: 50%; /* Circular button */
+}

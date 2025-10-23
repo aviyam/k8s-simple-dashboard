@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Container Images in Use Across the Cluster</h2>
+    <div class="list-group">
+        {% for image in images %}
+            <li class="list-group-item">{{ image }}</li>
+        {% else %}
+            <li class="list-group-item">No images found.</li>
+        {% endfor %}
+    </div>
+{% endblock %}
