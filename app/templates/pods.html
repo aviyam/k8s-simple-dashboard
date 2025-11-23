@@ -9,7 +9,8 @@
 {% endif %}
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Pods in <span class="text-primary">{% if namespace == 'all' %}All Namespaces{% else %}{{ namespace }}{% endif %}</span></h2>
+    <h2>Pods in <span class="text-primary">{% if namespace == 'all' %}All Namespaces{% else %}{{ namespace }}{% endif
+            %}</span></h2>
 </div>
 
 <table class="table table-striped table-hover">
@@ -25,16 +26,16 @@
         </tr>
     </thead>
     <tbody id="resourceTableBody">
-    {% for pod in pods %}
+        {% for pod in pods %}
         {% set status_class = '' %}
         {% if pod.status == 'Running' %}
-            {% set status_class = 'status-running' %}
+        {% set status_class = 'status-running' %}
         {% elif pod.status == 'Succeeded' %}
-            {% set status_class = 'status-succeeded' %}
+        {% set status_class = 'status-succeeded' %}
         {% elif pod.status == 'Failed' or pod.status == 'Error' %}
-            {% set status_class = 'status-failed' %}
+        {% set status_class = 'status-failed' %}
         {% elif pod.status == 'Pending' %}
-            {% set status_class = 'status-pending' %}
+        {% set status_class = 'status-pending' %}
         {% endif %}
 
         <tr class="{{ status_class }}">
@@ -45,23 +46,30 @@
             <td>{{ pod.ip }}</td>
             <td>{{ pod.node }}</td>
             <td>
-                <a href="{{ url_for('main.show_logs_page', namespace=pod.namespace, name=pod.name) }}" class="btn btn-success btn-sm">Logs</a>
-                <a href="{{ url_for('main.describe_pod', namespace=pod.namespace, name=pod.name) }}" class="btn btn-info btn-sm">Describe</a>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('main.show_logs_page', namespace=pod.namespace, name=pod.name) }}"
+                        class="btn btn-success btn-sm">Logs</a>
+                    <a href="{{ url_for('main.describe_pod', namespace=pod.namespace, name=pod.name, source_namespace=namespace) }}"
+                        class="btn btn-info btn-sm">Describe</a>
 
-                <form action="{{ url_for('main.restart_pod', namespace=pod.namespace, name=pod.name) }}" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-warning btn-sm">Restart</button>
-                </form>
+                    <form action="{{ url_for('main.restart_pod', namespace=pod.namespace, name=pod.name) }}"
+                        method="post">
+                        <button type="submit" class="btn btn-warning btn-sm">Restart</button>
+                    </form>
 
-                <form action="{{ url_for('main.delete_pod', namespace=pod.namespace, name=pod.name) }}" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this pod?');">Delete</button>
-                </form>
+                    <form action="{{ url_for('main.delete_pod', namespace=pod.namespace, name=pod.name) }}"
+                        method="post">
+                        <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Are you sure you want to delete this pod?');">Delete</button>
+                    </form>
+                </div>
             </td>
         </tr>
-    {% else %}
+        {% else %}
         <tr>
             <td colspan="7" class="text-center">No pods found.</td>
         </tr>
-    {% endfor %}
+        {% endfor %}
     </tbody>
 </table>
 

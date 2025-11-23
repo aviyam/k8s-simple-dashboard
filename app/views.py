@@ -76,7 +76,8 @@ def restart_pod(namespace, name):
 def describe_pod(namespace, name):
     """Shows the detailed YAML description of a pod."""
     details = k8s_client.get_pod_details(name, namespace)
-    return render_template('pod_details.html', name=name, details=details)
+    source_namespace = request.args.get('source_namespace', namespace)
+    return render_template('pod_details.html', name=name, details=details, source_namespace=source_namespace)
 
 @bp.route('/deployments')
 def deployments_list():
