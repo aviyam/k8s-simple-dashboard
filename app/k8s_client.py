@@ -5,6 +5,7 @@ from kubernetes import client, config
 import base64
 from kubernetes.config.config_exception import ConfigException
 from kubernetes.client.exceptions import ApiException
+import shutil
 
 # Global API client instances
 core_v1 = None
@@ -92,7 +93,7 @@ def _format_bytes(size_bytes):
 
 
 # --- CORE V1 RESOURCES ---
-import shutil # Add this import at the top of the file
+# --- CORE V1 RESOURCES ---
 
 # ... (other code) ...
 
@@ -118,56 +119,9 @@ def get_cluster_status():
         print(f"Could not retrieve component statuses: {e}")
         component_statuses.append({'name': 'component-status-api', 'healthy': False,
                                    'message': 'API not available or insufficient permissions.'})
-    # try:
-    #     usage = shutil.disk_usage("/")
-    #     disk_status = {'total_gb': round(usage.total / (1024 ** 3), 2), 'used_gb': round(usage.used / (1024 ** 3), 2),
-    #                    'percent': round((usage.used / usage.total) * 100)}
-    # except Exception as e:
-    #     print(f"Could not retrieve disk status: {e}")
-    #     disk_status = None
-    #
-    # # NEW: Read config.yaml and calculate sizes for each path
-    # path_usages = []
-    # try:
-    #     with open('config.yaml', 'r') as f:
-    #         config_data = yaml.safe_load(f)
-    #         paths_to_check = config_data.get('disk_usage_paths', [])
-    #         for path in paths_to_check:
-    #             size_bytes = _get_dir_size(path)
-    #             path_usages.append({
-    #                 'path': path,
-    #                 'size': _format_bytes(size_bytes)
-    #             })
-    # except FileNotFoundError:
-    #     print("config.yaml not found, skipping detailed path usage.")
-    # except Exception as e:
-    #     print(f"Error processing config.yaml: {e}")
-
     return {
         'pod_counts': pod_counts,
         'component_statuses': component_statuses
-        # 'disk_status': disk_status,
-        # 'path_usages': path_usages  # Add path usages to the returned data
-    }
-    # 3. NEW: Get App Container Disk Utilization
-    try:
-        usage = shutil.disk_usage("/") # Check the root filesystem of the container
-        disk_total_gb = round(usage.total / (1024**3), 2)
-        disk_used_gb = round(usage.used / (1024**3), 2)
-        disk_percent = round((usage.used / usage.total) * 100)
-        disk_status = {
-            'total_gb': disk_total_gb,
-            'used_gb': disk_used_gb,
-            'percent': disk_percent
-        }
-    except Exception as e:
-        print(f"Could not retrieve disk status: {e}")
-        disk_status = None
-
-    return {
-        'pod_counts': pod_counts,
-        'component_statuses': component_statuses,
-        'disk_status': disk_status # Add disk status to the returned data
     }
 
 
@@ -233,8 +187,19 @@ def get_pod_details(name, namespace="default"):
         for cond in pod_data.status.conditions:
             details['conditions'].append({'type': cond.type, 'status': cond.status,
                                           'last_transition_time': cond.last_transition_time.strftime(
-                                              "%Y-%m-%d %H:%M:%S")})
+                                              "%Y-%m-%d %H:%M:%S") if cond.last_transition_time else 'N/A'})
     return details
+
+
+def delete_pod(name, namespace):
+    """Deletes a pod."""
+    if not core_v1: init_k8s_client()
+    try:
+        core_v1.delete_namespaced_pod(name=name, namespace=namespace)
+        print(f"Pod {name} in namespace {namespace} deleted.")
+    except client.ApiException as e:
+        print(f"Error deleting pod {name}: {e}")
+        raise
 
 
 def stream_pod_logs(name, namespace="default"):
@@ -244,10 +209,10 @@ def stream_pod_logs(name, namespace="default"):
         stream = core_v1.read_namespaced_pod_log(name=name, namespace=namespace, follow=True, _preload_content=False)
         for line in stream:
             decoded_line = line.decode('utf-8')
-            yield f"data: {decoded_line}\n\n"
+            yield decoded_line
     except Exception as e:
         error_message = f"--- LOG STREAM ERROR: {e} ---"
-        yield f"data: {error_message}\n\n"
+        yield error_message
 
 
 def get_nodes():

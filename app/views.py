@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
+import base64
 from . import k8s_client
 from datetime import datetime, timedelta
 import yaml
@@ -95,12 +96,21 @@ def show_logs_page(namespace, name):
     """Renders the HTML page for viewing pod logs."""
     return render_template('pod_logs.html', namespace=namespace, name=name)
 
+from ansi2html import Ansi2HTMLConverter
+
 @bp.route('/pods/logs/stream/<namespace>/<name>')
 def stream_logs(namespace, name):
-    """Provides a real-time stream of pod logs."""
-    log_generator = k8s_client.stream_pod_logs(name, namespace)
+    """Provides a real-time stream of pod logs with ANSI color conversion."""
+    def generate():
+        conv = Ansi2HTMLConverter(inline=True)
+        for line in k8s_client.stream_pod_logs(name, namespace):
+            # Convert ANSI to HTML
+            html_line = conv.convert(line, full=False)
+            # Yield as SSE, stripping the newline from ansi2html since we add <br> in frontend
+            yield f"data: {html_line.strip()}\n\n"
+
     # The official mimetype for Server-Sent Events is 'text/event-stream'
-    return Response(log_generator, mimetype='text/event-stream')
+    return Response(generate(), mimetype='text/event-stream')
 
 
 @bp.route('/deployments/describe/<namespace>/<name>')
@@ -153,9 +163,7 @@ def secrets_list():
     return render_template('secrets.html', items=items, namespace=namespace)
 
 
-# Add base64 and jsonify to the import line at the top
-from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
-import base64
+
 
 
 @bp.route('/secrets/describe/<namespace>/<name>')

@@ -10,12 +10,13 @@
 
 <div class="card bg-dark text-white">
     <div class="card-body">
-        <pre id="log-output" style="white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto;"></pre>
+        <pre id="log-output"
+            style="white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto;"></pre>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const logOutput = document.getElementById('log-output');
 
         // The URL for our streaming endpoint
@@ -25,14 +26,22 @@
         const eventSource = new EventSource(logStreamUrl);
 
         // Append new log lines as they arrive from the server
-        eventSource.onmessage = function(event) {
-            logOutput.textContent += event.data;
-            // Auto-scroll to the bottom
-            logOutput.scrollTop = logOutput.scrollHeight;
+        eventSource.onmessage = function (event) {
+            // Create a span for the new line and set its innerHTML to render the ANSI colors
+            const newSpan = document.createElement('span');
+            newSpan.innerHTML = event.data + "<br>"; // Add line break as ansi2html might not include it
+            logOutput.appendChild(newSpan);
+
+            // Auto-scroll to the bottom only if we were already near the bottom
+            // This allows the user to scroll up to read history without fighting the auto-scroll
+            const isScrolledToBottom = logOutput.scrollHeight - logOutput.clientHeight <= logOutput.scrollTop + 50;
+            if (isScrolledToBottom) {
+                logOutput.scrollTop = logOutput.scrollHeight;
+            }
         };
 
         // Handle errors, e.g., if the connection is lost
-        eventSource.onerror = function(err) {
+        eventSource.onerror = function (err) {
             logOutput.textContent += "\n--- Connection lost. Reconnecting... ---\n";
             console.error("EventSource failed:", err);
             // The browser will automatically try to reconnect.
