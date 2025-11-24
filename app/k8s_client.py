@@ -28,14 +28,17 @@ def init_k8s_client(context_name=None):
             config.load_incluster_config()
             current_context = "in-cluster"
         except ConfigException:
-            config.load_kube_config(context=context_name)
-            _, active_context = config.list_kube_config_contexts()
+            # Only pass context if it's explicitly provided
             if context_name:
+                config.load_kube_config(context=context_name)
                 current_context = context_name
-            elif active_context:
-                current_context = active_context['name']
             else:
-                current_context = "unknown"
+                config.load_kube_config()
+                _, active_context = config.list_kube_config_contexts()
+                if active_context:
+                    current_context = active_context['name']
+                else:
+                    current_context = "unknown"
     except (ConfigException, ApiException) as e:
         # Catch any configuration or API connection error and raise our custom exception
         raise K8sConnectionError(f"Could not connect to the Kubernetes cluster. Please check your kubeconfig file or cluster status. Details: {e}") from e
@@ -125,8 +128,9 @@ def get_cluster_status():
     Aggregates overall cluster status, including detailed disk usage
     for paths defined in config.yaml.
     """
-    # ... (pod_counts and component_statuses logic is unchanged) ...
-    if not core_v1: init_k8s_client()
+    if not core_v1:
+        raise K8sConnectionError("Kubernetes client is not initialized. Cannot retrieve cluster status.")
+    
     pod_list = core_v1.list_pod_for_all_namespaces()
     pod_counts = {'Running': 0, 'Pending': 0, 'Succeeded': 0, 'Failed': 0, 'Unknown': 0}
     for pod in pod_list.items:
