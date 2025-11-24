@@ -220,7 +220,8 @@ def get_pod_details(name, namespace="default"):
 
 def delete_pod(name, namespace):
     """Deletes a pod."""
-    if not core_v1: init_k8s_client()
+    if not core_v1:
+        raise K8sConnectionError("Kubernetes client is not initialized. Cannot delete pod.")
     try:
         core_v1.delete_namespaced_pod(name=name, namespace=namespace)
         print(f"Pod {name} in namespace {namespace} deleted.")

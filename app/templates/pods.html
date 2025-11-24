@@ -58,9 +58,8 @@
                     </form>
 
                     <form action="{{ url_for('main.delete_pod', namespace=pod.namespace, name=pod.name) }}"
-                        method="post">
-                        <button type="submit" class="btn btn-danger btn-sm"
-                            onclick="return confirm('Are you sure you want to delete this pod?');">Delete</button>
+                        method="post" class="delete-form" data-pod-name="{{ pod.name }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 </div>
             </td>
@@ -73,4 +72,19 @@
     </tbody>
 </table>
 
+
+<script>
+    // Handle delete confirmation
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.delete-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                const podName = this.dataset.podName;
+                if (!confirm(`Are you sure you want to delete pod "${podName}"?`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
