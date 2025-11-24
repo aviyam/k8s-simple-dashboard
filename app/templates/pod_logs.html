@@ -8,12 +8,7 @@
     <a href="{{ url_for('main.pods_list', namespace=namespace) }}" class="btn btn-secondary">Back to Pods</a>
 </div>
 
-<div class="card bg-dark text-white">
-    <div class="card-body">
-        <pre id="log-output"
-            style="white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto;"></pre>
-    </div>
-</div>
+<pre id="log-output" class="log-terminal"></pre>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

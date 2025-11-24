@@ -49,7 +49,7 @@
         <h6>Labels</h6>
         <p>
             {% for key, value in details.labels.items() %}
-            <span class="badge bg-info text-dark">{{ key }}={{ value }}</span>
+            <span class="badge bg-info">{{ key }}={{ value }}</span>
             {% endfor %}
         </p>
     </div>
@@ -79,10 +79,22 @@
 {% for container in details.containers %}
 <div class="card mb-3">
     <div class="card-body">
-        <h5 class="card-title">Container: {{ container.name }}</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">Container: {{ container.name }}</h5>
+            <a href="{{ url_for('main.terminal_page', namespace=details.namespace, name=details.name, container=container.name) }}"
+                class="btn btn-sm btn-dark">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-terminal-fill me-1" viewBox="0 0 16 16">
+                    <path
+                        d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3zm9.5 5.5h-3a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zm-6.354-.354a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L6.5 10.293 3.146 8.146z" />
+                </svg>
+                Terminal
+            </a>
+        </div>
         <p><strong>Image:</strong> {{ container.image }}</p>
         <p><strong>State:</strong> {{ container.state }} | <strong>Ready:</strong> {{ container.ready }} |
-            <strong>Restarts:</strong> {{ container.restarts }}</p>
+            <strong>Restarts:</strong> {{ container.restarts }}
+        </p>
 
         <h6>Environment Variables</h6>
         <table class="table table-sm table-borderless">

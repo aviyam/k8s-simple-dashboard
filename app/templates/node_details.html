@@ -6,22 +6,25 @@
 </div>
 
 <div class="card mb-4">
-    <div class="card-header"><h5 class="card-title mb-0">{{ details.name }}</h5></div>
+    <div class="card-header">
+        <h5 class="card-title mb-0">{{ details.name }}</h5>
+    </div>
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">Created</dt><dd class="col-sm-9">{{ details.creation_timestamp }}</dd>
+            <dt class="col-sm-3">Created</dt>
+            <dd class="col-sm-9">{{ details.creation_timestamp }}</dd>
             <dt class="col-sm-3">Taints</dt>
             <dd class="col-sm-9">
                 {% for taint in details.taints %}
-                    <span class="badge bg-secondary">{{ taint }}</span>
+                <span class="badge bg-secondary">{{ taint }}</span>
                 {% else %}
-                    &lt;none&gt;
+                &lt;none&gt;
                 {% endfor %}
             </dd>
             <dt class="col-sm-3">Labels</dt>
             <dd class="col-sm-9">
                 {% for key, value in details.labels.items() %}
-                <span class="badge bg-info text-dark">{{ key }}={{ value }}</span>
+                <span class="badge bg-info">{{ key }}={{ value }}</span>
                 {% endfor %}
             </dd>
         </dl>
@@ -29,40 +32,60 @@
 </div>
 
 <div class="card mb-4">
-    <div class="card-header"><h5 class="card-title mb-0">System Information</h5></div>
+    <div class="card-header">
+        <h5 class="card-title mb-0">System Information</h5>
+    </div>
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">Kubelet Version</dt><dd class="col-sm-9">{{ details.system_info.kubelet_version }}</dd>
-            <dt class="col-sm-3">OS Image</dt><dd class="col-sm-9">{{ details.system_info.os_image }}</dd>
-            <dt class="col-sm-3">Kernel Version</dt><dd class="col-sm-9">{{ details.system_info.kernel_version }}</dd>
-            <dt class="col-sm-3">Container Runtime</dt><dd class="col-sm-9">{{ details.system_info.container_runtime_version }}</dd>
+            <dt class="col-sm-3">Kubelet Version</dt>
+            <dd class="col-sm-9">{{ details.system_info.kubelet_version }}</dd>
+            <dt class="col-sm-3">OS Image</dt>
+            <dd class="col-sm-9">{{ details.system_info.os_image }}</dd>
+            <dt class="col-sm-3">Kernel Version</dt>
+            <dd class="col-sm-9">{{ details.system_info.kernel_version }}</dd>
+            <dt class="col-sm-3">Container Runtime</dt>
+            <dd class="col-sm-9">{{ details.system_info.container_runtime_version }}</dd>
         </dl>
     </div>
 </div>
 
 <h4 class="mt-4">Conditions</h4>
 <table class="table table-bordered table-sm mb-4">
-    <thead class="table-light"><tr><th>Type</th><th>Status</th><th>Message</th></tr></thead>
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Message</th>
+        </tr>
+    </thead>
     <tbody>
-    {% for cond in details.conditions %}
-        <tr><td>{{ cond.type }}</td><td>{{ cond.status }}</td><td>{{ cond.message }}</td></tr>
-    {% endfor %}
+        {% for cond in details.conditions %}
+        <tr>
+            <td>{{ cond.type }}</td>
+            <td>{{ cond.status }}</td>
+            <td>{{ cond.message }}</td>
+        </tr>
+        {% endfor %}
     </tbody>
 </table>
 
 <div class="card mb-4">
-    <div class="card-header"><h5 class="card-title mb-0">Resource Allocation</h5></div>
+    <div class="card-header">
+        <h5 class="card-title mb-0">Resource Allocation</h5>
+    </div>
     <div class="card-body row">
         <div class="col-md-6">
             <h6>Capacity</h6>
             <ul class="list-group">
-                {% for key, value in details.capacity.items() %}<li class="list-group-item">{{ key }}: {{ value }}</li>{% endfor %}
+                {% for key, value in details.capacity.items() %}<li class="list-group-item">{{ key }}: {{ value }}</li>
+                {% endfor %}
             </ul>
         </div>
         <div class="col-md-6">
             <h6>Allocatable</h6>
             <ul class="list-group">
-                {% for key, value in details.allocatable.items() %}<li class="list-group-item">{{ key }}: {{ value }}</li>{% endfor %}
+                {% for key, value in details.allocatable.items() %}<li class="list-group-item">{{ key }}: {{ value }}
+                </li>{% endfor %}
             </ul>
         </div>
     </div>
@@ -70,37 +93,59 @@
 
 <h4 class="mt-4">Pods</h4>
 <table class="table table-striped table-sm mb-4">
-    <thead class="table-light"><tr><th>Name</th><th>Namespace</th><th>Status</th><th>Actions</th></tr></thead>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Namespace</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
     <tbody>
-    {% for pod in details.pods %}
+        {% for pod in details.pods %}
         <tr>
             <td>{{ pod.name }}</td>
             <td>{{ pod.namespace }}</td>
             <td>{{ pod.status }}</td>
             <td>
-                <a href="{{ url_for('main.describe_pod', namespace=pod.namespace, name=pod.name) }}" class="btn btn-info btn-sm">Describe</a>
-                <a href="{{ url_for('main.show_logs_page', namespace=pod.namespace, name=pod.name) }}" class="btn btn-success btn-sm">Logs</a>
+                <a href="{{ url_for('main.describe_pod', namespace=pod.namespace, name=pod.name) }}"
+                    class="btn btn-info btn-sm">Describe</a>
+                <a href="{{ url_for('main.show_logs_page', namespace=pod.namespace, name=pod.name) }}"
+                    class="btn btn-success btn-sm">Logs</a>
             </td>
         </tr>
-    {% else %}
-        <tr><td colspan="4" class="text-center">No pods are running on this node.</td></tr>
-    {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="4" class="text-center">No pods are running on this node.</td>
+        </tr>
+        {% endfor %}
     </tbody>
 </table>
 
 <h4 class="mt-4">Events</h4>
 <table class="table table-striped table-sm">
-    <thead class="table-light"><tr><th>Last Seen</th><th>Type</th><th>Reason</th><th>Message</th></tr></thead>
+    <thead>
+        <tr>
+            <th>Last Seen</th>
+            <th>Type</th>
+            <th>Reason</th>
+            <th>Message</th>
+        </tr>
+    </thead>
     <tbody>
-    {% for event in details.events %}
+        {% for event in details.events %}
         <tr>
             <td>{{ event.last_seen }}</td>
-            <td><span class="badge bg-{{ 'warning text-dark' if event.type == 'Warning' else 'secondary' }}">{{ event.type }}</span></td>
-            <td>{{ event.reason }}</td><td>{{ event.message }}</td>
+            <td><span class="badge bg-{{ 'warning text-dark' if event.type == 'Warning' else 'secondary' }}">{{
+                    event.type }}</span></td>
+            <td>{{ event.reason }}</td>
+            <td>{{ event.message }}</td>
         </tr>
-    {% else %}
-        <tr><td colspan="4" class="text-center">No events found.</td></tr>
-    {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="4" class="text-center">No events found.</td>
+        </tr>
+        {% endfor %}
     </tbody>
 </table>
 

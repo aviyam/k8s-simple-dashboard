@@ -88,9 +88,3 @@ The application relies on the standard Kubernetes client configuration. It will 
 2.  `KUBECONFIG` environment variable.
 3.  `~/.kube/config` file.
 
-## Tech Stack
-
-*   **Backend**: Python, Flask, Gunicorn
-*   **Frontend**: HTML, CSS (Vanilla), JavaScript
-*   **Kubernetes**: Official Python Client
-*   **Package Manager**: uv

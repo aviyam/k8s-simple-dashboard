@@ -1,11 +1,12 @@
 import os
 import yaml
 from datetime import datetime, timezone
-from kubernetes import client, config
+from kubernetes import client, config, watch
+from kubernetes.stream import stream as k8s_stream
 import base64
 from kubernetes.config.config_exception import ConfigException
 from kubernetes.client.exceptions import ApiException
-import shutil
+
 
 # Global API client instances
 core_v1 = None
@@ -13,19 +14,28 @@ apps_v1 = None
 batch_v1 = None
 networking_v1 = None
 custom_objects_api = None
+current_context = None
 
 class K8sConnectionError(Exception):
     """Custom exception for Kubernetes connection errors."""
     pass
 
-def init_k8s_client():
+def init_k8s_client(context_name=None):
     """Initializes all necessary Kubernetes API clients."""
-    global core_v1, apps_v1, batch_v1, networking_v1, custom_objects_api
+    global core_v1, apps_v1, batch_v1, networking_v1, custom_objects_api, current_context
     try:
         try:
             config.load_incluster_config()
+            current_context = "in-cluster"
         except ConfigException:
-            config.load_kube_config()
+            config.load_kube_config(context=context_name)
+            _, active_context = config.list_kube_config_contexts()
+            if context_name:
+                current_context = context_name
+            elif active_context:
+                current_context = active_context['name']
+            else:
+                current_context = "unknown"
     except (ConfigException, ApiException) as e:
         # Catch any configuration or API connection error and raise our custom exception
         raise K8sConnectionError(f"Could not connect to the Kubernetes cluster. Please check your kubeconfig file or cluster status. Details: {e}") from e
@@ -35,11 +45,24 @@ def init_k8s_client():
     batch_v1 = client.BatchV1Api()
     networking_v1 = client.NetworkingV1Api()
     custom_objects_api = client.CustomObjectsApi()
-    print("Kubernetes clients initialized successfully.")
+    print(f"Kubernetes clients initialized successfully (Context: {current_context}).")
+
+
+def get_contexts():
+    """Returns a list of available contexts and the current context."""
+    try:
+        contexts, active_context = config.list_kube_config_contexts()
+        if not contexts:
+            return [], None
+        return [c['name'] for c in contexts], current_context
+    except ConfigException:
+        return [], None
 
 
 def _format_age(creation_timestamp):
     """Formats a timedelta into a human-readable age string."""
+    if not creation_timestamp:
+        return "N/A"
     now = datetime.now(timezone.utc)
     delta = now - creation_timestamp
     if delta.days > 0:
@@ -213,6 +236,61 @@ def stream_pod_logs(name, namespace="default"):
     except Exception as e:
         error_message = f"--- LOG STREAM ERROR: {e} ---"
         yield error_message
+
+
+def stream_cluster_events():
+    """
+    Generates a stream of real-time cluster events.
+    """
+    if not core_v1:
+        init_k8s_client()
+    
+    w = watch.Watch()
+    try:
+        # Watch for events in all namespaces
+        # We use a timeout to allow the generator to check for client disconnection or other issues periodically
+        for event in w.stream(core_v1.list_event_for_all_namespaces, timeout_seconds=60):
+            event_obj = event['object']
+            # We are primarily interested in new events being added to the history
+            if event['type'] == 'ADDED':
+                yield event_obj
+    except Exception as e:
+        print(f"Event stream error: {e}")
+
+
+def terminal_stream(name, namespace, container, shell=None):
+    """
+    Establishes a websocket-like stream to a pod container.
+    Tries multiple shells in order: /bin/sh, /bin/ash, /bin/bash
+    """
+    if not core_v1:
+        init_k8s_client()
+    
+    # List of shells to try in order
+    shells_to_try = [shell] if shell else ['/bin/sh', '/bin/ash', '/bin/bash']
+    
+    last_error = None
+    for shell_cmd in shells_to_try:
+        if shell_cmd is None:
+            continue
+        try:
+            stream = k8s_stream(
+                core_v1.connect_get_namespaced_pod_exec,
+                name,
+                namespace,
+                container=container,
+                command=[shell_cmd],
+                stderr=True, stdin=True,
+                stdout=True, tty=True,
+                _preload_content=False
+            )
+            return stream
+        except Exception as e:
+            last_error = e
+            continue
+    
+    # If all shells failed, raise the last error
+    raise Exception(f"Could not connect to container with any shell. Last error: {last_error}")
 
 
 def get_nodes():

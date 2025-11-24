@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
-import base64
-from . import k8s_client
-from datetime import datetime, timedelta
+import json
+
+from . import k8s_client, sock
+import threading
 import yaml
 
 bp = Blueprint('main', __name__)
@@ -31,12 +32,30 @@ def inject_nodes():
     except k8s_client.K8sConnectionError:
         return dict(all_nodes=[])
 
+@bp.context_processor
+def inject_contexts():
+    """
+    Injects the list of available contexts and the current context.
+    """
+    contexts, current_context = k8s_client.get_contexts()
+    return dict(all_contexts=contexts, current_context=current_context)
+
 
 
 @bp.errorhandler(k8s_client.K8sConnectionError)
 def handle_k8s_connection_error(error):
     """Renders a custom error page for K8s connection issues."""
     return render_template('error_k8s_connection.html', error_message=str(error)), 500
+
+@bp.route('/switch-context/<name>')
+def switch_context(name):
+    """Switches the active Kubernetes context."""
+    try:
+        k8s_client.init_k8s_client(context_name=name)
+        flash(f"Switched to context: {name}", "success")
+    except Exception as e:
+        flash(f"Failed to switch context: {e}", "danger")
+    return redirect(url_for('main.index'))
 
 @bp.route('/')
 def index():
@@ -111,6 +130,91 @@ def stream_logs(namespace, name):
             yield f"data: {html_line.strip()}\n\n"
 
     # The official mimetype for Server-Sent Events is 'text/event-stream'
+    return Response(generate(), mimetype='text/event-stream')
+
+
+@bp.route('/pods/terminal/<namespace>/<name>')
+def terminal_page(namespace, name):
+    """Renders the terminal page."""
+    container = request.args.get('container')
+    details = k8s_client.get_pod_details(name, namespace)
+    # Default to first container if not specified
+    if not container and details['containers']:
+        container = details['containers'][0]['name']
+    return render_template('terminal.html', namespace=namespace, name=name, container=container, details=details)
+
+
+@sock.route('/pods/terminal/ws/<namespace>/<name>/<container>')
+def terminal_ws(ws, namespace, name, container):
+    """Handles the websocket connection for the terminal."""
+    try:
+        k8s_ws = k8s_client.terminal_stream(name, namespace, container)
+    except Exception as e:
+        ws.send(f"Error connecting to container: {e}\r\n")
+        ws.close()
+        return
+
+    # Helper to read from K8s and send to Browser
+    def read_from_k8s():
+        try:
+            while True:
+                try:
+                    if k8s_ws.is_open():
+                        data = k8s_ws.read_stdout(timeout=0.1)
+                        if data:
+                            ws.send(data)
+                        
+                        err = k8s_ws.read_stderr(timeout=0.1)
+                        if err:
+                            ws.send(err)
+                    else:
+                        break
+                except Exception:
+                    break
+        except Exception:
+            pass
+        finally:
+            try:
+                ws.close()
+            except:
+                pass
+
+    # Start the reader thread
+    t = threading.Thread(target=read_from_k8s, daemon=True)
+    t.start()
+
+    # Main thread reads from Browser and sends to K8s
+    try:
+        while True:
+            data = ws.receive()
+            if data is None:
+                break
+            k8s_ws.write_stdin(data)
+    except Exception:
+        pass
+    finally:
+        try:
+            k8s_ws.close()
+        except:
+            pass
+
+
+@bp.route('/events/stream')
+def events_stream():
+    """Provides a real-time stream of cluster events."""
+    def generate():
+        for event in k8s_client.stream_cluster_events():
+            data = {
+                'reason': event.reason,
+                'message': event.message,
+                'kind': event.involved_object.kind,
+                'name': event.involved_object.name,
+                'namespace': event.involved_object.namespace,
+                'type': event.type, # Warning or Normal
+                'timestamp': event.last_timestamp.strftime("%H:%M:%S") if event.last_timestamp else ''
+            }
+            yield f"data: {json.dumps(data)}\n\n"
+    
     return Response(generate(), mimetype='text/event-stream')
 
 

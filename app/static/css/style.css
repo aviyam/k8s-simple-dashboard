@@ -1,37 +1,364 @@
+:root {
+    --bg-body: #f8f9fa;
+    --bg-sidebar: #ffffff;
+    --bg-card: #ffffff;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --border-color: #dee2e6;
+    --accent-color: #0d6efd;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --sidebar-width: 250px;
+}
 
+[data-theme="dark"] {
+    --bg-body: #0b0e14;
+    --bg-sidebar: #151922;
+    --bg-card: #1d2330;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border-color: #2d3748;
+    --accent-color: #3b82f6;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden;
+}
+
+/* Layout */
+#wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+#sidebar-wrapper {
+    width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+    transition: all 0.3s;
+}
+
+#page-content-wrapper {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background-color: var(--bg-body);
+}
+
+/* Sidebar */
+.sidebar-heading {
+    padding: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.list-group-item {
+    background-color: transparent;
+    color: var(--text-main);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--accent-color);
+}
+
+.list-group-item.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: 0 25px 25px 0;
+    margin-right: 1rem;
+}
+
+/* Top Navbar */
+.top-navbar {
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Cards */
+.card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    color: var(--text-main);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* Tables */
+.table {
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+
+.table> :not(caption)>*>* {
+    background-color: transparent;
+    border-bottom-color: var(--border-color);
+    color: var(--text-main);
+}
+
+.table-striped>tbody>tr:nth-of-type(odd)>* {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.table-hover>tbody>tr:hover>* {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Status Badges */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+    border-radius: 0.375rem;
+}
+
+.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.bg-warning {
+    background-color: var(--warning-color) !important;
+}
+
+.bg-danger {
+    background-color: var(--danger-color) !important;
+}
+
+.bg-info {
+    background-color: var(--accent-color) !important;
+    color: #ffffff !important;
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--bg-card);
+    border-color: var(--accent-color);
+    color: var(--text-main);
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+}
+
+/* Theme Switcher */
+.theme-switch-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.theme-switch {
+    display: inline-block;
+    height: 24px;
+    position: relative;
+    width: 48px;
+}
+
+.theme-switch input {
+    display: none;
+}
+
+.slider {
+    background-color: #ccc;
+    bottom: 0;
+    cursor: pointer;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: .4s;
+}
+
+.slider:before {
+    background-color: #fff;
+    bottom: 3px;
+    content: "";
+    height: 18px;
+    left: 3px;
+    position: absolute;
+    transition: .4s;
+    width: 18px;
+}
+
+input:checked+.slider {
+    background-color: var(--accent-color);
+}
+
+input:checked+.slider:before {
+    transform: translateX(24px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Utility */
+.text-primary {
+    color: var(--accent-color) !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.border-bottom {
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* Status Row Colors (Legacy support but updated) */
 tr.status-running {
-  --bs-table-bg: rgba(40, 167, 69, 0.2);
-  --bs-table-striped-bg: rgba(40, 167, 69, 0.2);
-  --bs-table-hover-bg: rgba(40, 167, 69, 0.3);
+    --bs-table-bg: rgba(16, 185, 129, 0.1);
 }
 
 tr.status-succeeded {
-  --bs-table-bg: rgba(89, 223, 253, 0.3);
-  --bs-table-striped-bg: rgba(89, 223, 253, 0.3);
-  --bs-table-hover-bg: rgba(89, 223, 253, 0.3);
+    --bs-table-bg: rgba(59, 130, 246, 0.1);
 }
 
 tr.status-pending {
-  --bs-table-bg: rgba(255, 193, 7, 0.2);
-  --bs-table-striped-bg: rgba(255, 193, 7, 0.2);
-  --bs-table-hover-bg: rgba(255, 193, 7, 0.3);
+    --bs-table-bg: rgba(245, 158, 11, 0.1);
 }
 
 tr.status-failed {
-  --bs-table-bg: rgba(220, 53, 69, 0.2);
-  --bs-table-striped-bg: rgba(220, 53, 69, 0.2);
-  --bs-table-hover-bg: rgba(220, 53, 69, 0.3);
+    --bs-table-bg: rgba(239, 68, 68, 0.1);
 }
 
-#backToTopBtn {
-  display: none; /* Hidden by default */
-  position: fixed; /* Fixed/sticky position */
-  bottom: 20px; /* Place the button at the bottom of the page */
-  right: 30px; /* Place the button on the right side */
-  z-index: 99; /* Make sure it does not overlap */
-  border: none; /* Remove borders */
-  outline: none; /* Remove outline */
-  cursor: pointer; /* Add a mouse pointer on hover */
-  padding: 10px 15px; /* Some padding */
-  border-radius: 50%; /* Circular button */
+/* Log Terminal */
+.log-terminal {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 75vh;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Scrollbar for the terminal */
+.log-terminal::-webkit-scrollbar {
+    width: 10px;
+}
+
+.log-terminal::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.log-terminal::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 5px;
+    border: 2px solid #1e1e1e;
+}
+
+.log-terminal::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a;
+}
+
+
+/* Sub Navbar */
+.sub-navbar {
+    background-color: var(--bg-sidebar);
+    color: var(--text-main);
+}
+
+/* Links */
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--accent-color);
+    text-decoration: underline;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-main);
+}
+
+/* Table Headers */
+.table th {
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+}
+
+/* Form Placeholders */
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
 }
